@@ -1,3 +1,5 @@
+[![Release](https://github.com/cage1016/react-resume-site/actions/workflows/release.yml/badge.svg)](https://github.com/cage1016/react-resume-site/actions/workflows/release.yml)
+
 # 木及简历
 
 一款用 `Markdown`就能写出好看简历的在线工具，告别使用 word 繁杂的编写方式。
