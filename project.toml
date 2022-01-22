@@ -1,0 +1,6 @@
+[build]
+exclude = [
+    ".history/",
+    ".git",
+    "node_modules/"
+]
