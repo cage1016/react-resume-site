@@ -1,0 +1,53 @@
+name: Release
+on:
+  release:
+    types:
+      - published
+    branches:
+      - develop
+
+# on:
+#   push:
+#     branches:
+#       - develop
+#   workflow_dispatch: # Run workflow manually (without waiting for the cron to be called), through the Github Actions Workflow page directly
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        node-version: [14.x]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: develop
+    - name: Setup node
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm run build
+      env: 
+        CI: false
+    - name: Parse Event
+      id: event
+      run: |
+        echo "::set-output name=tag::$(jq -r '.release.tag_name' "${GITHUB_EVENT_PATH}" | sed s/^v//)"
+    - name: Login to GitHub Package Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GHCR_TOKEN }}    
+    - id: setup-pack
+      uses: buildpacks/github-actions/setup-pack@v4.1.0
+    - id: package
+      run: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        pack build ${IMAGE} --buildpack gcr.io/paketo-buildpacks/nginx --builder ${BUILDER} --publish
+      shell: bash
+      env:
+        BUILDER: paketobuildpacks/builder:base
+        IMAGE: ghcr.io/${{ github.repository_owner }}/react-resume-site:${{ steps.event.outputs.tag }}
